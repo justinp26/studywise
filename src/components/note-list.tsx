@@ -10,10 +10,11 @@ import {Input} from '@/components/ui/input';
 import {useNotes} from '@/hooks/use-notes';
 
 export const NoteList = () => {
-  const {notes, addNote} = useNotes();
+  const {notes, addNote, updateNote} = useNotes();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredNotes, setFilteredNotes] = useState(notes);
   const [aiContexts, setAiContexts] = useState({});
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     const fetchAIContext = async () => {
@@ -57,20 +58,24 @@ export const NoteList = () => {
     }
   }, [searchTerm, notes]);
 
-  const handleGenerateFollowUpNote = async (topic: string, existingNoteContent: string) => {
+  const handleGenerateFollowUpNote = async (topic: string, existingNoteContent: string, noteId: string) => {
+    setIsGenerating(true);
     try {
       const followUpNoteData = await generateFollowUpNote({
         topic: topic,
         existingNoteContent: existingNoteContent,
       });
 
-      await addNote({
-        title: `Follow-up: ${topic}`,
-        body: followUpNoteData.followUpNote,
-        tags: ['AI Generated', 'Follow-up'],
+      // Append the follow-up note content to the existing note's body
+      const updatedBody = `${existingNoteContent}\n\n**Follow-up on ${topic}:**\n${followUpNoteData.followUpNote}`;
+
+      await updateNote(noteId, {
+        body: updatedBody,
       });
     } catch (error) {
       console.error('Failed to generate follow-up note:', error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -117,9 +122,10 @@ export const NoteList = () => {
                             variant="secondary"
                             size="sm"
                             className="ml-2"
-                            onClick={() => handleGenerateFollowUpNote(topic, note.body)}
+                            onClick={() => handleGenerateFollowUpNote(topic, note.body, note.id)}
+                            disabled={isGenerating}
                           >
-                            Generate Note
+                            {isGenerating ? "Generating..." : "Generate Note"}
                           </Button>
                         </li>
                       ))}
@@ -134,5 +140,3 @@ export const NoteList = () => {
     </div>
   );
 };
-
-    

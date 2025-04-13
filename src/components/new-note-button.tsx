@@ -91,7 +91,10 @@ export const NewNoteButton = () => {
           </div>
         </div>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={() => {
+            setTitle('');
+            setBody('');
+          }}>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleCreateNote}>
             Create
           </AlertDialogAction>

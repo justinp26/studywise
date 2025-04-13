@@ -11,12 +11,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTrigger, // Import AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {useNotes} from '@/hooks/use-notes';
+import {Textarea} from '@/components/ui/textarea';
 
 export const NewNoteButton = () => {
   const [title, setTitle] = useState('');
@@ -81,8 +82,7 @@ export const NewNoteButton = () => {
             <Label htmlFor="body" className="text-right">
               Body
             </Label>
-            <Input
-              type="text"
+            <Textarea
               id="body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -100,3 +100,4 @@ export const NewNoteButton = () => {
     </AlertDialog>
   );
 };
+

@@ -2,13 +2,15 @@
 
 import {useState, useEffect} from 'react';
 import {generateContext} from '@/ai/flows/generate-context';
+import {generateFollowUpNote} from '@/ai/flows/generate-followup-note';
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from '@/components/ui/accordion';
+import {Button} from '@/components/ui/button';
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {Input} from '@/components/ui/input';
 import {useNotes} from '@/hooks/use-notes';
 
 export const NoteList = () => {
-  const {notes} = useNotes();
+  const {notes, addNote} = useNotes();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredNotes, setFilteredNotes] = useState(notes);
   const [aiContexts, setAiContexts] = useState({});
@@ -55,6 +57,23 @@ export const NoteList = () => {
     }
   }, [searchTerm, notes]);
 
+  const handleGenerateFollowUpNote = async (topic: string, existingNoteContent: string) => {
+    try {
+      const followUpNoteData = await generateFollowUpNote({
+        topic: topic,
+        existingNoteContent: existingNoteContent,
+      });
+
+      await addNote({
+        title: `Follow-up: ${topic}`,
+        body: followUpNoteData.followUpNote,
+        tags: ['AI Generated', 'Follow-up'],
+      });
+    } catch (error) {
+      console.error('Failed to generate follow-up note:', error);
+    }
+  };
+
   return (
     <div>
       <Input
@@ -92,7 +111,17 @@ export const NoteList = () => {
                     <h4 className="font-bold mt-2">Follow-up Topics:</h4>
                     <ul>
                       {aiContexts[note.id].followUpTopics.map((topic, index) => (
-                        <li key={index}>{topic}</li>
+                        <li key={index}>
+                          {topic}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="ml-2"
+                            onClick={() => handleGenerateFollowUpNote(topic, note.body)}
+                          >
+                            Generate Note
+                          </Button>
+                        </li>
                       ))}
                     </ul>
                   </AccordionContent>
@@ -105,3 +134,5 @@ export const NoteList = () => {
     </div>
   );
 };
+
+    

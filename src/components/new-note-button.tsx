@@ -16,23 +16,40 @@ import {
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
+import {useNotes} from '@/hooks/use-notes';
 
 export const NewNoteButton = () => {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const {toast} = useToast();
+  const {addNote} = useNotes();
 
   const handleCreateNote = async () => {
-    // Here you would typically send the data to your Firebase backend
-    // For simplicity, we'll just show a toast message
-    toast({
-      title: 'Note Created',
-      description: `Title: ${title}, Body: ${body}`,
-    });
+    if (!title.trim() || !body.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Title and body cannot be empty.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-    // Reset the form
-    setTitle('');
-    setBody('');
+    try {
+      await addNote({title, body, tags: []}); // Initialize tags as an empty array
+      toast({
+        title: 'Note Created',
+        description: `Title: ${title}`,
+      });
+
+      setTitle('');
+      setBody('');
+    } catch (error: any) {
+      toast({
+        title: 'Error creating note',
+        description: error.message || 'Failed to create note.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (

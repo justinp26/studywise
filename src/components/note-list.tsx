@@ -5,53 +5,54 @@ import {generateContext} from '@/ai/flows/generate-context';
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from '@/components/ui/accordion';
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {Input} from '@/components/ui/input';
-
-const notesData = [
-  {
-    id: '1',
-    title: 'Introduction to React',
-    body: 'React is a JavaScript library for building user interfaces.',
-    tags: ['JavaScript', 'React', 'UI'],
-  },
-  {
-    id: '2',
-    title: 'Hooks in React',
-    body: 'Hooks are functions that let you “hook into” React state and lifecycle features from function components.',
-    tags: ['JavaScript', 'React', 'Hooks'],
-  },
-  {
-    id: '3',
-    title: 'Components in React',
-    body: 'Components let you split the UI into independent, reusable pieces.',
-    tags: ['JavaScript', 'React', 'Components'],
-  },
-];
+import {useNotes} from '@/hooks/use-notes';
 
 export const NoteList = () => {
-  const [notes, setNotes] = useState(notesData);
+  const {notes} = useNotes();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredNotes, setFilteredNotes] = useState(notes);
   const [aiContexts, setAiContexts] = useState({});
 
   useEffect(() => {
     const fetchAIContext = async () => {
-      const contexts = {};
-      for (const note of notes) {
-        const context = await generateContext({noteContent: note.body});
-        contexts[note.id] = context;
+      if (!notes) return;
+
+      try {
+        const contexts = await Promise.all(
+          notes.map(async note => {
+            try {
+              const context = await generateContext({noteContent: note.body});
+              return {noteId: note.id, context};
+            } catch (error) {
+              console.error(`Failed to generate context for note ${note.id}:`, error);
+              return {noteId: note.id, context: null};
+            }
+          })
+        );
+
+        const contextsMap = {};
+        contexts.forEach(({noteId, context}) => {
+          if (context) {
+            contextsMap[noteId] = context;
+          }
+        });
+        setAiContexts(contextsMap);
+      } catch (error) {
+        console.error('Failed to fetch AI contexts:', error);
       }
-      setAiContexts(contexts);
     };
 
     fetchAIContext();
   }, [notes]);
 
   useEffect(() => {
-    const results = notes.filter((note) =>
-      note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.body.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredNotes(results);
+    if (notes) {
+      const results = notes.filter((note) =>
+        note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note.body.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredNotes(results);
+    }
   }, [searchTerm, notes]);
 
   return (
@@ -63,7 +64,7 @@ export const NoteList = () => {
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
-      {filteredNotes.map((note) => (
+      {filteredNotes?.map((note) => (
         <Card key={note.id} className="mb-4">
           <CardHeader>
             <CardTitle>{note.title}</CardTitle>

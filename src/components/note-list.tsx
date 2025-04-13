@@ -66,7 +66,7 @@ export const NoteList = () => {
         existingNoteContent: existingNoteContent,
       });
 
-      // Append the follow-up note content to the existing note's body
+      
       const updatedBody = `${existingNoteContent}\n\n**Follow-up on ${topic}:**\n${followUpNoteData.followUpNote}`;
 
       await updateNote(noteId, {

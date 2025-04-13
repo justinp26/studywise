@@ -51,9 +51,12 @@ const generateFollowUpNoteFlow = ai.defineFlow<
     outputSchema: GenerateFollowUpNoteOutputSchema,
   },
   async input => {
+    // [GoogleGenerativeAI Error]: API key expired. Please renew the API key.
     const {output} = await generateFollowUpNotePrompt(input);
     return output!;
   }
 );
+
+    
 
     
